@@ -410,7 +410,6 @@ export default function ShippingDashboard() {
             route: r.route,
             revenue: Number(r.revenue),
           }))}
-          categories={["revenue"]}
         />
 
         {/* Ship Profit Distribution */}

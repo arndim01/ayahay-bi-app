@@ -42,8 +42,10 @@ const TopRoutesPerformanceCard: React.FC<TopRoutesPerformanceCardProps> = ({
       </CardHeader>
       <CardContent>
         <ChartContainer
-          config={{ revenue: { label: "Revenue", color: "var(--color-chart-1)" } }}
-          className="h-[400px]"
+          config={{
+            revenue: { label: "Revenue", color: "var(--color-chart-1)" },
+          }}
+          className={`h-[${topRoutes.length * 50}px]`} // 50px per route
         >
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data} layout="vertical">
