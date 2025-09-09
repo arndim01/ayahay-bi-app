@@ -25,7 +25,7 @@ import {
 interface RevenueChartProps {
   paymentsData: any[];
   expensesData: any[];
-  timeFilter: "today" | "this month" | "this year";
+  timeFilter: "today" | "this-month" | "this-year";
 }
 
 export default function RevenueChart({
@@ -69,7 +69,7 @@ export default function RevenueChart({
       return;
     }
 
-    if (timeFilter === "this month") {
+    if (timeFilter === "this-month") {
       const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
       const dailyData = Array.from({ length: daysInMonth }, (_, i) => {
         const day = i + 1;
@@ -99,7 +99,7 @@ export default function RevenueChart({
       return;
     }
 
-    if (timeFilter === "this year") {
+    if (timeFilter === "this-year") {
       const months = [
         "Jan","Feb","Mar","Apr","May","Jun",
         "Jul","Aug","Sep","Oct","Nov","Dec"
@@ -130,7 +130,7 @@ export default function RevenueChart({
         <CardDescription>
           {timeFilter === "today"
             ? "Today's performance"
-            : timeFilter === "this month"
+            : timeFilter === "this-month"
             ? "Daily performance for this month"
             : "Monthly performance for this year"}
         </CardDescription>

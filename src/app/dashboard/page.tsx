@@ -47,44 +47,61 @@ import RevenueChart from "@/components/executive dashboard/RevenueProfitChart";
 import BookingDistributionCard from "@/components/executive dashboard/BookingDistribution";
 import TopRoutesPerformanceCard from "@/components/executive dashboard/TopRoute";
 
-// Sample data for the dashboard
-const shipProfitData = [
-  { ship: "Atlantic Star", profit: 450000, trips: 24 },
-  { ship: "Pacific Queen", profit: 380000, trips: 22 },
-  { ship: "Mediterranean", profit: 320000, trips: 20 },
-  { ship: "Baltic Express", profit: 290000, trips: 18 },
-  { ship: "Caribbean Dream", profit: 250000, trips: 16 },
-];
-
-const routeProfitability = [
+let routeProfitability = [
   {
-    route: "Shanghai-LA",
-    profitMargin: 35,
-    volume: "High",
-    status: "Excellent",
-  },
-  { route: "Hamburg-NYC", profitMargin: 28, volume: "High", status: "Good" },
-  {
-    route: "Singapore-Rotterdam",
-    profitMargin: 32,
-    volume: "Medium",
+    route: "Port A to Port B",
+    volume: 1200,
+    profitMargin: 25,
     status: "Good",
   },
   {
-    route: "Dubai-Miami",
-    profitMargin: 25,
-    volume: "Medium",
-    status: "Average",
-  },
-  {
-    route: "Tokyo-Seattle",
-    profitMargin: 22,
-    volume: "Low",
+    route: "Port C to Port D",
+    volume: 800,
+    profitMargin: 15,
     status: "Average",
   },
 ];
 
+function getStatusColor(status: string) {
+  switch (status) {
+    case "Good":
+      return "bg-green-100 text-green-800";
+    case "Average":
+      return "bg-yellow-100 text-yellow-800";
+    case "Poor":
+      return "bg-red-100 text-red-800";
+    default:
+      return "bg-gray-100 text-gray-800";
+  }
+}
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+
+function useFetchDataWithFilter(baseUrl: string, timeFilter: string) {
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      const url = `${baseUrl}/${timeFilter}`;
+      try {
+        // Add timeFilter as query parameter
+
+        const response = await fetch(url);
+        const json = await response.json();
+        console.log(`Fetched filtered data from ${url}:`, json);
+        setData(json);
+      } catch (error) {
+        console.error(`Error fetching ${url}:`, error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [baseUrl, timeFilter]);
+
+  return { data, loading, setData };
+}
 
 function useFetchData(url: string) {
   const [data, setData] = useState<any[]>([]);
@@ -109,61 +126,75 @@ function useFetchData(url: string) {
   return { data, loading, setData };
 }
 
-function calculatePercentageChange(current: number, previous: number) {
-  if (previous === 0) return current === 0 ? 0 : 100;
-  return ((current - previous) / previous) * 100;
-}
-
 export default function ShippingDashboard() {
   const [timeFilter, setTimeFilter] = useState<
-    "today" | "this month" | "this year"
-  >("this month");
+    "today" | "this-month" | "this-year"
+  >("this-month");
 
-  const { data: tripsData } = useFetchData(
-    `${API_URL}/business-intelligence/trips`
+  // Updated to use filtered data directly from backend
+  const { data: tripsData } = useFetchDataWithFilter(
+    `${API_URL}/business-intelligence/trips`,
+    timeFilter
   );
-  const { data: paymentsData } = useFetchData(
-    `${API_URL}/business-intelligence/payments`
+  const { data: paymentsData } = useFetchDataWithFilter(
+    `${API_URL}/business-intelligence/payments`,
+    timeFilter
   );
-  const { data: expensesData } = useFetchData(
-    `${API_URL}/business-intelligence/expenses`
+  const { data: expensesData } = useFetchDataWithFilter(
+    `${API_URL}/business-intelligence/expenses`,
+    timeFilter
+  );
+  const { data: cargosData } = useFetchDataWithFilter(
+    `${API_URL}/business-intelligence/cargos`,
+    timeFilter
+  );
+  const { data: passengersData } = useFetchDataWithFilter(
+    `${API_URL}/business-intelligence/passengers`,
+    timeFilter
+  );
+  const { data: bookingsData } = useFetchDataWithFilter(
+    `${API_URL}/business-intelligence/bookings`,
+    timeFilter
   );
 
-  const { data: cargosData } = useFetchData(
-    `${API_URL}/business-intelligence/cargos`
-  );
-  const { data: passengersData } = useFetchData(
-    `${API_URL}/business-intelligence/passengers`
-  );
+  // Convert time filter to URL-safe format
+  const getUrlSafeTimeFilter = (filter: string) => {
+    return filter.replace(/ /g, "-"); // Convert spaces to hyphens
+  };
 
-  const { data: bookingsData } = useFetchData(
-    `${API_URL}/business-intelligence/bookings`
-  );
-
+  // Updated to use URL-safe time filters
   const { data: topRoutes } = useFetchData(
-    `${API_URL}/business-intelligence/top-routes/${
-      timeFilter === "today"
-        ? "Today"
-        : timeFilter === "this month"
-        ? "This Month"
-        : "This Year"
-    }`
+    `${API_URL}/business-intelligence/top-routes/${getUrlSafeTimeFilter(
+      timeFilter
+    )}`
   );
+
+  // Get ship profits data
+  const { data: shipProfitsData } = useFetchData(
+    `${API_URL}/business-intelligence/ship-profits/${getUrlSafeTimeFilter(
+      timeFilter
+    )}`
+  );
+
+  // Remove dashboard metrics for now since endpoint doesn't exist
+  // const { data: dashboardMetrics } = useFetchData(
+  //   `${API_URL}/business-intelligence/dashboard-metrics/${getUrlSafeTimeFilter(timeFilter)}`
+  // );
 
   console.log("TopRoute", topRoutes);
+  console.log("Ship Profits", shipProfitsData);
 
-  const [filteredTripsData, setFilteredTripsData] = useState<Trip[]>([]);
-  const [filteredPaymentsData, setFilteredPaymentsData] = useState<any[]>([]);
-  const [filteredExpensesData, setFilteredExpensesData] = useState<any[]>([]);
-  const [filteredCargosData, setFilteredCargosData] = useState<any[]>([]);
-  const [filteredPassengersData, setFilteredPassengersData] = useState<any[]>(
-    []
-  );
-  const [filteredBookingsData, setFilteredBookingsData] = useState<any[]>([]);
-
-  const [revenueData, setRevenueData] = useState<
-    { month: string; revenue: number; profit: number; expenses: number }[]
-  >([]);
+  // Remove all client-side filtering logic since it's now done in database
+  const [metrics, setMetrics] = useState({
+    totalRevenue: 0,
+    totalTrips: 0,
+    totalExpenses: 0,
+    totalProfit: 0,
+    profitMargin: 0,
+    totalCargos: 0,
+    totalPassengers: 0,
+    totalBookings: 0,
+  });
 
   const [percentageChange, setPercentageChange] = useState({
     trips: 0,
@@ -174,189 +205,55 @@ export default function ShippingDashboard() {
     cargos: 0,
     passengers: 0,
   });
-  const [valueChange, setValueChange] = useState({
-    totalRevenue: 0,
-    totalTrips: 0,
-    totalExpenses: 0,
-    totalProfit: 0,
-    profitMargin: 0,
-    totalCargos: 0,
-    totalPassengers: 0,
-  });
 
   useEffect(() => {
-    const filterByTime = (
-      data: any[] | undefined,
-      dateField: string,
-      period: "current" | "previous"
-    ) => {
-      if (!Array.isArray(data)) return []; // safeguard
-
-      const now = new Date();
-
-      return data.filter((item) => {
-        const itemDate = new Date(item[dateField]);
-        if (isNaN(itemDate.getTime())) return false; // skip invalid dates
-
-        if (timeFilter === "today") {
-          const targetDate =
-            period === "current" ? now : new Date(Date.now() - 86400000);
-          return (
-            itemDate.getDate() === targetDate.getDate() &&
-            itemDate.getMonth() === targetDate.getMonth() &&
-            itemDate.getFullYear() === targetDate.getFullYear()
-          );
-        }
-
-        if (timeFilter === "this month") {
-          let targetMonth = now.getMonth();
-          let targetYear = now.getFullYear();
-
-          if (period === "previous") {
-            targetMonth -= 1;
-            if (targetMonth < 0) {
-              targetMonth += 12; // wrap around to December
-              targetYear -= 1; // decrement year
-            }
-          }
-
-          return (
-            itemDate.getMonth() === targetMonth &&
-            itemDate.getFullYear() === targetYear
-          );
-        }
-
-        if (timeFilter === "this year") {
-          const targetYear =
-            period === "current" ? now.getFullYear() : now.getFullYear() - 1;
-          return itemDate.getFullYear() === targetYear;
-        }
-
-        return true;
-      });
-    };
-
-    // Filter data
-    const currentTrips = filterByTime(tripsData, "created_at", "current");
-    const previousTrips = filterByTime(tripsData, "created_at", "previous");
-
-    const currentCargos = filterByTime(cargosData, "created_at", "current");
-    const previousCargos = filterByTime(cargosData, "created_at", "previous");
-
-    const currentBookings = filterByTime(bookingsData, "created_at", "current");
-
-    const currentPassengers = filterByTime(
-      passengersData,
-      "created_at",
-      "current"
-    );
-    const previousPassengers = filterByTime(
-      passengersData,
-      "created_at",
-      "previous"
-    );
-
-    const currentPayments = filterByTime(
-      paymentsData,
-      "payment_date",
-      "current"
-    );
-    const previousPayments = filterByTime(
-      paymentsData,
-      "payment_date",
-      "previous"
-    );
-    const currentExpenses = filterByTime(expensesData, "created_at", "current");
-    const previousExpenses = filterByTime(
-      expensesData,
-      "created_at",
-      "previous"
-    );
-
-    // Update states
-    setFilteredTripsData(currentTrips);
-    setFilteredPaymentsData(currentPayments);
-    setFilteredExpensesData(currentExpenses);
-    setFilteredCargosData(currentCargos);
-    setFilteredPassengersData(currentPassengers);
-    setFilteredBookingsData(currentBookings);
-
-    const totalRevenue = currentPayments.reduce(
-      (a, b) => a + (Number(b.total_price) || 0),
-      0
-    );
-    const previousRevenue = previousPayments.reduce(
+    // Simply calculate totals from the already-filtered data
+    const totalRevenue = paymentsData.reduce(
       (a, b) => a + (Number(b.total_price) || 0),
       0
     );
 
-    const totalExpenses = currentExpenses.reduce(
-      (a, b) => a + (b.amount || 0),
+    const totalExpenses = expensesData.reduce(
+      (a, b) => a + (Number(b.amount) || 0),
       0
     );
+
     const totalProfit = totalRevenue - totalExpenses;
     const profitMargin =
       totalRevenue !== 0 ? (totalProfit / totalRevenue) * 100 : 0;
 
-    setPercentageChange({
-      trips: calculatePercentageChange(
-        currentTrips.length,
-        previousTrips.length
-      ),
-      payments: calculatePercentageChange(totalRevenue, previousRevenue),
-      expenses: calculatePercentageChange(
-        currentExpenses.reduce((a, b) => a + (b.amount || 0), 0),
-        previousExpenses.reduce((a, b) => a + (b.amount || 0), 0)
-      ),
-      profit: calculatePercentageChange(
-        totalProfit,
-        previousRevenue -
-          previousExpenses.reduce((a, b) => a + (b.amount || 0), 0)
-      ),
-      profitMargin: calculatePercentageChange(
-        profitMargin,
-        previousRevenue -
-          previousExpenses.reduce((a, b) => a + (b.amount || 0), 0) !==
-          0
-          ? ((previousRevenue -
-              previousExpenses.reduce((a, b) => a + (b.amount || 0), 0)) /
-              previousRevenue) *
-              100
-          : 0
-      ),
-      cargos: calculatePercentageChange(
-        currentCargos.length,
-        previousCargos.length
-      ),
-      passengers: calculatePercentageChange(
-        currentPassengers.length,
-        previousPassengers.length
-      ),
-    });
-
-    setValueChange({
+    setMetrics({
       totalRevenue,
-      totalTrips: currentTrips.length,
+      totalTrips: tripsData.length,
       totalExpenses,
       totalProfit,
       profitMargin,
-      totalCargos: currentCargos.length,
-      totalPassengers: currentPassengers.length,
+      totalCargos: cargosData.length,
+      totalPassengers: passengersData.length,
+      totalBookings: bookingsData.length,
     });
-  }, [tripsData, paymentsData, expensesData, bookingsData, timeFilter]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Excellent":
-        return "bg-green-500";
-      case "Good":
-        return "bg-blue-500";
-      case "Average":
-        return "bg-yellow-500";
-      default:
-        return "bg-gray-500";
-    }
-  };
+    // For percentage changes, you'll need to implement previous period comparison
+    // This would require additional API endpoints for previous period data
+    // For now, setting to 0
+    setPercentageChange({
+      trips: 0, // TODO: Implement previous period comparison
+      payments: 0,
+      expenses: 0,
+      profit: 0,
+      profitMargin: 0,
+      cargos: 0,
+      passengers: 0,
+    });
+  }, [
+    tripsData,
+    paymentsData,
+    expensesData,
+    cargosData,
+    passengersData,
+    bookingsData,
+    timeFilter,
+  ]);
 
   return (
     <div className="p-6 space-y-6">
@@ -368,20 +265,20 @@ export default function ShippingDashboard() {
         setTimeFilter={setTimeFilter}
       />
 
-      {/* Key Metrics */}
+      {/* Key Metrics - now using database-filtered data */}
       <KeyMetrics
-        totalRevenue={valueChange.totalRevenue}
-        totalProfit={valueChange.totalProfit}
-        totalExpenses={valueChange.totalExpenses}
-        profitMargin={valueChange.profitMargin}
+        totalRevenue={metrics.totalRevenue}
+        totalProfit={metrics.totalProfit}
+        totalExpenses={metrics.totalExpenses}
+        profitMargin={metrics.profitMargin}
         percentageChange={percentageChange}
       />
 
       {/* Operational Metrics */}
       <OperationalMetrics
-        totalCargos={valueChange.totalCargos}
-        totalPassengers={valueChange.totalPassengers}
-        totalTrips={valueChange.totalTrips}
+        totalCargos={metrics.totalCargos}
+        totalPassengers={metrics.totalPassengers}
+        totalTrips={metrics.totalTrips}
         percentageChange={{
           cargos: percentageChange.cargos,
           passengers: percentageChange.passengers,
@@ -391,7 +288,7 @@ export default function ShippingDashboard() {
 
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Revenue, Profit, Expenses Chart */}
+        {/* Revenue, Profit, Expenses Chart - pass filtered data */}
         <RevenueChart
           paymentsData={paymentsData}
           expensesData={expensesData}
@@ -399,20 +296,20 @@ export default function ShippingDashboard() {
         />
 
         {/* Booking Distribution */}
-        <BookingDistributionCard bookingsData={filteredBookingsData} />
+        <BookingDistributionCard bookingsData={bookingsData} />
       </div>
 
       {/* Charts Row 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Routes */}
         <TopRoutesPerformanceCard
-          topRoutes={topRoutes.map((r) => ({
+          topRoutes={(topRoutes || []).map((r) => ({
             route: r.route,
             revenue: Number(r.revenue),
           }))}
         />
 
-        {/* Ship Profit Distribution */}
+        {/* Ship Profit Distribution - now using real data */}
         <Card>
           <CardHeader>
             <CardTitle>Ship Profit Distribution</CardTitle>
@@ -421,22 +318,22 @@ export default function ShippingDashboard() {
           <CardContent>
             <ChartContainer
               config={{
-                profit: { label: "Profit", color: "var(--color-chart-2)" },
+                profit: { label: "Net Profit", color: "var(--color-chart-2)" },
               }}
               className="h-[300px]"
             >
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={shipProfitData}>
+                <BarChart data={shipProfitsData || []}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
-                    dataKey="ship"
+                    dataKey="ship_name"
                     angle={-45}
                     textAnchor="end"
                     height={80}
                   />
                   <YAxis />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="profit" fill="var(--color-chart-2)" />
+                  <Bar dataKey="net_profit" fill="var(--color-chart-2)" />
                 </BarChart>
               </ResponsiveContainer>
             </ChartContainer>
@@ -444,9 +341,9 @@ export default function ShippingDashboard() {
         </Card>
       </div>
 
-      {/* Tables Row */}
+      {/* Tables Row - Update to use real ship data */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Route Profitability Matrix */}
+        {/* Route Profitability Matrix - keep sample data for now */}
         <Card>
           <CardHeader>
             <CardTitle>Route Profitability Matrix</CardTitle>
@@ -482,15 +379,17 @@ export default function ShippingDashboard() {
           </CardContent>
         </Card>
 
-        {/* Total Trips by Ship */}
+        {/* Ship Profits Table - now using real data */}
         <Card>
           <CardHeader>
-            <CardTitle>Total Trips by Ship</CardTitle>
-            <CardDescription>Vessel utilization overview</CardDescription>
+            <CardTitle>Ship Performance Overview</CardTitle>
+            <CardDescription>
+              Revenue and profitability by vessel
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {shipProfitData.map((ship, index) => (
+              {(shipProfitsData || []).map((ship, index) => (
                 <div
                   key={index}
                   className="flex items-center justify-between p-3 border rounded-lg"
@@ -498,15 +397,17 @@ export default function ShippingDashboard() {
                   <div className="flex items-center gap-3">
                     <Anchor className="h-4 w-4 text-muted-foreground" />
                     <div>
-                      <p className="font-medium">{ship.ship}</p>
+                      <p className="font-medium">{ship.ship_name}</p>
                       <p className="text-sm text-muted-foreground">
-                        Profit: ${ship.profit.toLocaleString()}
+                        Revenue: ${Number(ship.total_revenue).toLocaleString()}
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-bold">{ship.trips}</p>
-                    <p className="text-sm text-muted-foreground">trips</p>
+                    <p className="text-lg font-bold">
+                      ${Number(ship.net_profit).toLocaleString()}
+                    </p>
+                    <p className="text-sm text-muted-foreground">net profit</p>
                   </div>
                 </div>
               ))}

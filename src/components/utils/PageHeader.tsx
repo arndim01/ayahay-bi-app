@@ -6,8 +6,8 @@ import { Dispatch, SetStateAction } from "react";
 interface PageHeaderProps {
   title: string;
   description?: string;
-  timeFilter: "today" | "this month" | "this year";
-  setTimeFilter: Dispatch<SetStateAction<"today" | "this month" | "this year">>;
+  timeFilter: "today" | "this-month" | "this-year";
+  setTimeFilter: Dispatch<SetStateAction<"today" | "this-month" | "this-year">>;
   showTimeFilter?: boolean; // optional if you don’t want buttons sometimes
 }
 
@@ -34,14 +34,14 @@ export default function PageHeader({
             Today
           </Button>
           <Button
-            variant={timeFilter === "this month" ? "default" : "outline"}
-            onClick={() => setTimeFilter("this month")}
+            variant={timeFilter === "this-month" ? "default" : "outline"}
+            onClick={() => setTimeFilter("this-month")}
           >
             This Month
           </Button>
           <Button
-            variant={timeFilter === "this year" ? "default" : "outline"}
-            onClick={() => setTimeFilter("this year")}
+            variant={timeFilter === "this-year" ? "default" : "outline"}
+            onClick={() => setTimeFilter("this-year")}
           >
             This Year
           </Button>
