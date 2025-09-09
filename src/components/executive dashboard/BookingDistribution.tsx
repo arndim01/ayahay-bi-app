@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/chart";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 
-
 const COLORS = [
   "var(--color-chart-1)",
   "var(--color-chart-2)",
@@ -32,12 +31,15 @@ interface BookingDistributionCardProps {
 const BookingDistributionCard: React.FC<BookingDistributionCardProps> = ({
   bookingsData,
 }) => {
+  // Ensure bookingsData is always an array
+  const safeBookings = Array.isArray(bookingsData) ? bookingsData : [];
+
   // Calculate dynamic distribution by source
   const bookingDistribution = useMemo(() => {
-    const total = bookingsData.length || 1;
+    const total = safeBookings.length || 1;
     const counts: Record<string, number> = {};
 
-    bookingsData.forEach((booking) => {
+    safeBookings.forEach((booking) => {
       const source = booking.source || "Unknown";
       counts[source] = (counts[source] || 0) + 1;
     });
@@ -47,7 +49,7 @@ const BookingDistributionCard: React.FC<BookingDistributionCardProps> = ({
       value: Math.round((count / total) * 100),
       color: COLORS[index % COLORS.length],
     }));
-  }, [bookingsData]);
+  }, [safeBookings]);
 
   // Generate chart config dynamically
   const chartConfig = useMemo(() => {
@@ -91,5 +93,4 @@ const BookingDistributionCard: React.FC<BookingDistributionCardProps> = ({
     </Card>
   );
 };
-
 export default BookingDistributionCard;

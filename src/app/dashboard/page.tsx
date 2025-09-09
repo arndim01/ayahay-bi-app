@@ -46,34 +46,10 @@ import OperationalMetrics from "@/components/executive dashboard/OperationalMetr
 import RevenueChart from "@/components/executive dashboard/RevenueProfitChart";
 import BookingDistributionCard from "@/components/executive dashboard/BookingDistribution";
 import TopRoutesPerformanceCard from "@/components/executive dashboard/TopRoute";
-
-let routeProfitability = [
-  {
-    route: "Port A to Port B",
-    volume: 1200,
-    profitMargin: 25,
-    status: "Good",
-  },
-  {
-    route: "Port C to Port D",
-    volume: 800,
-    profitMargin: 15,
-    status: "Average",
-  },
-];
-
-function getStatusColor(status: string) {
-  switch (status) {
-    case "Good":
-      return "bg-green-100 text-green-800";
-    case "Average":
-      return "bg-yellow-100 text-yellow-800";
-    case "Poor":
-      return "bg-red-100 text-red-800";
-    default:
-      return "bg-gray-100 text-gray-800";
-  }
-}
+import ShipProfitDistributionCard from "@/components/executive dashboard/ShipProfitDistribution";
+import RouteProfitabilityCard from "@/components/executive dashboard/RouteProfitability";
+import ShipPerformanceCard from "@/components/executive dashboard/ShipPerformance";
+import { apiService } from "@/services/api.service";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
@@ -103,25 +79,24 @@ function useFetchDataWithFilter(baseUrl: string, timeFilter: string) {
   return { data, loading, setData };
 }
 
-function useFetchData(url: string) {
-  const [data, setData] = useState<any[]>([]);
+function useApiData<T>(url: string, deps: any[] = []) {
+  const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetch(url);
-        const json = await response.json();
-        console.log(`Fetched data from ${url}:`, json);
-        setData(json);
-      } catch (error) {
-        console.error(`Error fetching ${url}:`, error);
+        const res = await apiService.get<T>(url);
+        console.log(`Fetched from ${url}:`, res);
+        setData(res);
+      } catch (err) {
+        console.error(`Error fetching ${url}:`, err);
       } finally {
         setLoading(false);
       }
     }
     fetchData();
-  }, [url]);
+  }, deps);
 
   return { data, loading, setData };
 }
@@ -132,29 +107,34 @@ export default function ShippingDashboard() {
   >("this-month");
 
   // Updated to use filtered data directly from backend
-  const { data: tripsData } = useFetchDataWithFilter(
-    `${API_URL}/business-intelligence/trips`,
-    timeFilter
+  const { data: tripsData } = useApiData<any[]>(
+    `/business-intelligence/trips/${timeFilter}`,
+    [timeFilter]
   );
-  const { data: paymentsData } = useFetchDataWithFilter(
-    `${API_URL}/business-intelligence/payments`,
-    timeFilter
+  const { data: paymentsData } = useApiData<any[]>(
+    `/business-intelligence/payments/${timeFilter}`,
+    [timeFilter]
   );
-  const { data: expensesData } = useFetchDataWithFilter(
-    `${API_URL}/business-intelligence/expenses`,
-    timeFilter
+  const { data: expensesData } = useApiData<any[]>(
+    `/business-intelligence/expenses/${timeFilter}`,
+    [timeFilter]
   );
-  const { data: cargosData } = useFetchDataWithFilter(
-    `${API_URL}/business-intelligence/cargos`,
-    timeFilter
+  const { data: cargosData } = useApiData<any[]>(
+    `/business-intelligence/cargos/${timeFilter}`,
+    [timeFilter]
   );
-  const { data: passengersData } = useFetchDataWithFilter(
-    `${API_URL}/business-intelligence/passengers`,
-    timeFilter
+  const { data: passengersData } = useApiData<any[]>(
+    `/business-intelligence/passengers/${timeFilter}`,
+    [timeFilter]
   );
-  const { data: bookingsData } = useFetchDataWithFilter(
-    `${API_URL}/business-intelligence/bookings`,
-    timeFilter
+  const { data: bookingsData } = useApiData<any[]>(
+    `/business-intelligence/bookings/${timeFilter}`,
+    [timeFilter]
+  );
+
+  const { data: routeProfitabilityData } = useApiData<any[]>(
+    `/business-intelligence/route-profitability/${timeFilter}`,
+    [timeFilter]
   );
 
   // Convert time filter to URL-safe format
@@ -163,23 +143,20 @@ export default function ShippingDashboard() {
   };
 
   // Updated to use URL-safe time filters
-  const { data: topRoutes } = useFetchData(
-    `${API_URL}/business-intelligence/top-routes/${getUrlSafeTimeFilter(
-      timeFilter
-    )}`
+  const { data: topRoutes } = useApiData<any[]>(
+    `/business-intelligence/top-routes/${timeFilter}`,
+    [timeFilter]
   );
 
   // Get ship profits data
-  const { data: shipProfitsData } = useFetchData(
-    `${API_URL}/business-intelligence/ship-profits/${getUrlSafeTimeFilter(
-      timeFilter
-    )}`
+  const { data: shipProfitsData } = useApiData<any[]>(
+    `/business-intelligence/ship-profits/${timeFilter}`,
+    [timeFilter]
   );
 
-  // Remove dashboard metrics for now since endpoint doesn't exist
-  // const { data: dashboardMetrics } = useFetchData(
-  //   `${API_URL}/business-intelligence/dashboard-metrics/${getUrlSafeTimeFilter(timeFilter)}`
-  // );
+  console.log("Payments", paymentsData);
+  console.log("Expenses", expensesData);
+  console.log("Cargos", cargosData);
 
   console.log("TopRoute", topRoutes);
   console.log("Ship Profits", shipProfitsData);
@@ -208,15 +185,13 @@ export default function ShippingDashboard() {
 
   useEffect(() => {
     // Simply calculate totals from the already-filtered data
-    const totalRevenue = paymentsData.reduce(
-      (a, b) => a + (Number(b.total_price) || 0),
-      0
-    );
+    const totalRevenue = (
+      Array.isArray(paymentsData) ? paymentsData : []
+    ).reduce((a, b) => a + (Number(b.total_price) || 0), 0);
 
-    const totalExpenses = expensesData.reduce(
-      (a, b) => a + (Number(b.amount) || 0),
-      0
-    );
+    const totalExpenses = (
+      Array.isArray(expensesData) ? expensesData : []
+    ).reduce((a, b) => a + (Number(b.amount) || 0), 0);
 
     const totalProfit = totalRevenue - totalExpenses;
     const profitMargin =
@@ -224,13 +199,13 @@ export default function ShippingDashboard() {
 
     setMetrics({
       totalRevenue,
-      totalTrips: tripsData.length,
+      totalTrips: Array.isArray(tripsData) ? tripsData.length : 0,
       totalExpenses,
       totalProfit,
       profitMargin,
-      totalCargos: cargosData.length,
-      totalPassengers: passengersData.length,
-      totalBookings: bookingsData.length,
+      totalCargos: Array.isArray(cargosData) ? cargosData.length : 0,
+      totalPassengers: Array.isArray(passengersData)? passengersData.length : 0,
+      totalBookings: Array.isArray(bookingsData)? bookingsData.length : 0,
     });
 
     // For percentage changes, you'll need to implement previous period comparison
@@ -253,6 +228,7 @@ export default function ShippingDashboard() {
     passengersData,
     bookingsData,
     timeFilter,
+    routeProfitabilityData,
   ]);
 
   return (
@@ -276,13 +252,13 @@ export default function ShippingDashboard() {
 
       {/* Operational Metrics */}
       <OperationalMetrics
-        totalCargos={metrics.totalCargos}
-        totalPassengers={metrics.totalPassengers}
-        totalTrips={metrics.totalTrips}
+        totalCargos={metrics?.totalCargos ?? 0}
+        totalPassengers={metrics?.totalPassengers ?? 0}
+        totalTrips={metrics?.totalTrips ?? 0}
         percentageChange={{
-          cargos: percentageChange.cargos,
-          passengers: percentageChange.passengers,
-          trips: percentageChange.trips,
+          cargos: percentageChange?.cargos ?? 0,
+          passengers: percentageChange?.passengers ?? 0,
+          trips: percentageChange?.trips ?? 0,
         }}
       />
 
@@ -290,130 +266,48 @@ export default function ShippingDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Revenue, Profit, Expenses Chart - pass filtered data */}
         <RevenueChart
-          paymentsData={paymentsData}
-          expensesData={expensesData}
+          paymentsData={Array.isArray(paymentsData) ? paymentsData : []}
+          expensesData={Array.isArray(expensesData) ? expensesData : []}
           timeFilter={timeFilter}
         />
 
         {/* Booking Distribution */}
-        <BookingDistributionCard bookingsData={bookingsData} />
+        <BookingDistributionCard bookingsData={bookingsData ?? []} />
       </div>
 
       {/* Charts Row 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Routes */}
         <TopRoutesPerformanceCard
-          topRoutes={(topRoutes || []).map((r) => ({
-            route: r.route,
-            revenue: Number(r.revenue),
-          }))}
+          topRoutes={
+            Array.isArray(topRoutes)
+              ? topRoutes.map((r) => ({
+                  route: r.route,
+                  revenue: Number(r.revenue),
+                }))
+              : []
+          }
         />
 
         {/* Ship Profit Distribution - now using real data */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Ship Profit Distribution</CardTitle>
-            <CardDescription>Profit by vessel</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer
-              config={{
-                profit: { label: "Net Profit", color: "var(--color-chart-2)" },
-              }}
-              className="h-[300px]"
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={shipProfitsData || []}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis
-                    dataKey="ship_name"
-                    angle={-45}
-                    textAnchor="end"
-                    height={80}
-                  />
-                  <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="net_profit" fill="var(--color-chart-2)" />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-        </Card>
+        <ShipProfitDistributionCard shipProfitsData={shipProfitsData ?? []} />
       </div>
 
-      {/* Tables Row - Update to use real ship data */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Route Profitability Matrix - keep sample data for now */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Route Profitability Matrix</CardTitle>
-            <CardDescription>Performance analysis by route</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {routeProfitability.map((route, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 border rounded-lg"
-                >
-                  <div className="flex items-center gap-3">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">{route.route}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Volume: {route.volume}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">
-                      {route.profitMargin}%
-                    </span>
-                    <Badge className={getStatusColor(route.status)}>
-                      {route.status}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+
+        <RouteProfitabilityCard
+          routeProfitability={
+            Array.isArray(routeProfitabilityData) ? routeProfitabilityData : []
+          }
+        />
 
         {/* Ship Profits Table - now using real data */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Ship Performance Overview</CardTitle>
-            <CardDescription>
-              Revenue and profitability by vessel
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {(shipProfitsData || []).map((ship, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 border rounded-lg"
-                >
-                  <div className="flex items-center gap-3">
-                    <Anchor className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">{ship.ship_name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Revenue: ${Number(ship.total_revenue).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold">
-                      ${Number(ship.net_profit).toLocaleString()}
-                    </p>
-                    <p className="text-sm text-muted-foreground">net profit</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <ShipPerformanceCard
+          shipProfitsData={
+            Array.isArray(shipProfitsData) ? shipProfitsData : []
+          }
+        />
       </div>
     </div>
   );
