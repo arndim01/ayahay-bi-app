@@ -49,29 +49,9 @@ import TopRoutesPerformanceCard from "@/components/executive dashboard/TopRoute"
 import ShipProfitDistributionCard from "@/components/executive dashboard/ShipProfitDistribution";
 import RouteProfitabilityCard from "@/components/executive dashboard/RouteProfitability";
 import ShipPerformanceCard from "@/components/executive dashboard/ShipPerformance";
-import { apiService } from "@/services/api.service";
+import { useApiData } from "@/hooks/useApiData";
 
-function useApiData<T>(url: string, deps: any[] = []) {
-  const [data, setData] = useState<T | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const res = await apiService.get<T>(url);
-        console.log(`Fetched from ${url}:`, res);
-        setData(res);
-      } catch (err) {
-        console.error(`Error fetching ${url}:`, err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-  }, deps);
-
-  return { data, loading, setData };
-}
 
 export default function ShippingDashboard() {
   const [timeFilter, setTimeFilter] = useState<

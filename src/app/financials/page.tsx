@@ -1,5 +1,5 @@
 "use client";
-
+import { useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -36,49 +36,58 @@ import {
   CheckCircle,
 } from "lucide-react";
 import PageHeader from "@/components/utils/PageHeader";
+import { useApiData } from "@/hooks/useApiData";
+import KeyMetrics from "@/components/executive dashboard/KeyMetrics";
+import RevenueByRouteCard from "@/components/financials/RevenueByRouteCard";
+import RevenueByShipCard from "@/components/financials/RevenueByShipCard";
+import PassengerVsCargoCard from "@/components/financials/PassengerVsCargoCard";
+import RevenueBySourceCard from "@/components/financials/RevenueBySource";
 
 export default function FinancialsPage() {
   const [timeFilter, setTimeFilter] = useState<
-    "today" | "this month" | "this year"
-  >("this month");
+    "today" | "this-month" | "this-year"
+  >("this-month");
+
+  // Metrics
+  const { data: dashboardMetrics } = useApiData<any>(
+    `/business-intelligence/dashboard-metrics/${timeFilter}`,
+    [timeFilter]
+  );
+
+  const { data: revenueByRoute } = useApiData<any[]>(
+    `/business-intelligence/revenue-by-route/${timeFilter}`,
+    [timeFilter]
+  );
+
+  const { data: revenueByShip } = useApiData<any[]>(
+    `/business-intelligence/revenue-by-ship/${timeFilter}`,
+    [timeFilter]
+  );
+
+  const { data: passengerVsCargo } = useApiData<any[]>(
+    `/business-intelligence/passenger-vs-cargo/${timeFilter}`,
+    [timeFilter]
+  );
+
+  const { data: customerTypes } = useApiData<any[]>(
+    `/business-intelligence/revenue-by-source/${timeFilter}`,
+    [timeFilter]
+  );
+
+  const [metrics, setMetrics] = useState({
+    totalRevenue: 0,
+    totalProfit: 0,
+    totalExpenses: 0,
+    profitMargin: 0,
+  });
+
+  useEffect(() => {
+    if (dashboardMetrics) {
+      setMetrics(dashboardMetrics.current);
+    }
+  }, [dashboardMetrics]);
 
   // Sample data for charts
-  const revenueByRoute = [
-    { route: "Miami-Nassau", revenue: 2400000, profit: 480000, margin: 20 },
-    {
-      route: "Fort Lauderdale-Freeport",
-      revenue: 1800000,
-      profit: 270000,
-      margin: 15,
-    },
-    { route: "Tampa-Havana", revenue: 3200000, profit: 640000, margin: 20 },
-    { route: "Key West-Cozumel", revenue: 1600000, profit: 160000, margin: 10 },
-    {
-      route: "Jacksonville-San Juan",
-      revenue: 2800000,
-      profit: 420000,
-      margin: 15,
-    },
-  ];
-
-  const revenueByShip = [
-    { ship: "Ocean Explorer", revenue: 3500000, utilization: 85 },
-    { ship: "Sea Voyager", revenue: 2800000, utilization: 78 },
-    { ship: "Wave Rider", revenue: 3200000, utilization: 82 },
-    { ship: "Blue Horizon", revenue: 2400000, utilization: 71 },
-    { ship: "Coral Princess", revenue: 2900000, utilization: 80 },
-  ];
-
-  const passengerVsCargo = [
-    { name: "Passenger Revenue", value: 8500000, percentage: 65 },
-    { name: "Cargo Revenue", value: 4600000, percentage: 35 },
-  ];
-
-  const customerTypes = [
-    { type: "Corporate Contracts", revenue: 7200000, percentage: 55 },
-    { type: "Walk-in Passengers", revenue: 3800000, percentage: 29 },
-    { type: "Tour Operators", revenue: 2100000, percentage: 16 },
-  ];
 
   const costBreakdown = [
     { category: "Fuel", amount: 2800000, percentage: 35, trend: 8 },
@@ -127,65 +136,13 @@ export default function FinancialsPage() {
       />
 
       {/* Key Financial Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">$13.1M</div>
-            <p className="text-xs text-muted-foreground flex items-center">
-              <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
-              +12.5% from last quarter
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Net Profit</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">$1.97M</div>
-            <p className="text-xs text-muted-foreground flex items-center">
-              <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
-              +8.2% margin improvement
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Expenses
-            </CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">$8.0M</div>
-            <p className="text-xs text-muted-foreground flex items-center">
-              <TrendingDown className="h-3 w-3 mr-1 text-red-500" />
-              +5.8% increase
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Profit Margin</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">15.0%</div>
-            <p className="text-xs text-muted-foreground flex items-center">
-              <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
-              +2.1% improvement
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <KeyMetrics
+        totalRevenue={metrics.totalRevenue}
+        totalProfit={metrics.totalProfit}
+        totalExpenses={metrics.totalExpenses}
+        profitMargin={metrics.profitMargin}
+        percentageChange={dashboardMetrics?.percentageChange ?? {}}
+      />
 
       <Tabs defaultValue="revenue" className="space-y-4">
         <TabsList className="grid w-full grid-cols-5">
@@ -199,163 +156,16 @@ export default function FinancialsPage() {
         <TabsContent value="revenue" className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Revenue by Route */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Revenue by Route</CardTitle>
-                <CardDescription>
-                  Performance analysis by shipping route
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={revenueByRoute}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis
-                      dataKey="route"
-                      angle={-45}
-                      textAnchor="end"
-                      height={80}
-                    />
-                    <YAxis />
-                    <Tooltip
-                      formatter={(
-                        value: number | string | (number | string)[]
-                      ) => {
-                        if (typeof value === "number") {
-                          return [
-                            `$${(value / 1_000_000).toFixed(1)}M`,
-                            "Revenue",
-                          ];
-                        }
-                        return [String(value), "Revenue"];
-                      }}
-                    />
-
-                    <Bar dataKey="revenue" fill="#0088FE" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+            <RevenueByRouteCard data={revenueByRoute ?? []} />
 
             {/* Revenue by Ship */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Revenue by Ship</CardTitle>
-                <CardDescription>
-                  Fleet performance and utilization
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <ComposedChart data={revenueByShip}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis
-                      dataKey="ship"
-                      angle={-45}
-                      textAnchor="end"
-                      height={80}
-                    />
-                    <YAxis yAxisId="left" />
-                    <YAxis yAxisId="right" orientation="right" />
-                    <Tooltip />
-                    <Bar yAxisId="left" dataKey="revenue" fill="#00C49F" />
-                    <Line
-                      yAxisId="right"
-                      type="monotone"
-                      dataKey="utilization"
-                      stroke="#FF8042"
-                      strokeWidth={3}
-                    />
-                  </ComposedChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+            <RevenueByShipCard revenueByShip={revenueByShip ?? []} />
 
             {/* Passenger vs Cargo Revenue */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Passenger vs Cargo Revenue</CardTitle>
-                <CardDescription>
-                  Revenue distribution by service type
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={passengerVsCargo}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percentage }) =>
-                        `${name}: ${percentage}%`
-                      }
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {passengerVsCargo.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(
-                        value: number | string | (number | string)[]
-                      ) => {
-                        if (typeof value === "number") {
-                          return [
-                            `$${(value / 1_000_000).toFixed(1)}M`,
-                            "Revenue",
-                          ];
-                        }
-                        return [String(value), "Revenue"];
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+            <PassengerVsCargoCard passengerVsCargo={passengerVsCargo} />
 
             {/* Customer Type Revenue */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Revenue by Customer Type</CardTitle>
-                <CardDescription>
-                  Corporate vs individual customer analysis
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {customerTypes.map((customer, index) => (
-                    <div
-                      key={customer.type}
-                      className="flex items-center justify-between"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <div
-                          className={`w-3 h-3 rounded-full`}
-                          style={{ backgroundColor: COLORS[index] }}
-                        />
-                        <span className="text-sm font-medium">
-                          {customer.type}
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-bold">
-                          ${(customer.revenue / 1000000).toFixed(1)}M
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {customer.percentage}%
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <RevenueBySourceCard data={customerTypes ?? []} />
           </div>
         </TabsContent>
 
@@ -613,17 +423,15 @@ export default function FinancialsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {revenueByRoute.map((route, index) => (
+                {revenueByRoute?.map((route, index) => (
                   <div key={route.route} className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="font-medium">{route.route}</span>
                       <div className="flex items-center space-x-4">
                         <span className="text-sm">
-                          Revenue: ${(route.revenue / 1000000).toFixed(1)}M
+                          Revenue: {route.revenue}
                         </span>
-                        <span className="text-sm">
-                          Profit: ${(route.profit / 1000000).toFixed(1)}M
-                        </span>
+                        <span className="text-sm">Profit: {route.profit}</span>
                         <Badge
                           variant={
                             route.margin >= 18
