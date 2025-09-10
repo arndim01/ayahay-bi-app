@@ -51,7 +51,7 @@ const data = {
       icon: IconMap2,
     },
     {
-      title: "People",
+      title: "Passengers",
       url: "/passengers",
       icon: IconUser,
     },
