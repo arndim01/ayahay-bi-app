@@ -4,33 +4,44 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, DollarSign, Calendar } from "lucide-react";
 
 interface KeyMetricsProps {
-  totalRevenue: number;
-  totalProfit: number;
-  totalExpenses: number;
-  profitMargin: number;
-  percentageChange: {
-    payments: number;
-    profit: number;
-    expenses: number;
-    profitMargin: number;
+  totalRevenue?: number;
+  totalProfit?: number;
+  totalExpenses?: number;
+  profitMargin?: number;
+  percentageChange?: {
+    totalRevenue?: number;
+    totalProfit?: number;
+    totalExpenses?: number;
+    profitMargin?: number;
   };
 }
 
 export default function KeyMetrics({
-  totalRevenue,
-  totalProfit,
-  totalExpenses,
-  profitMargin,
-  percentageChange,
+  totalRevenue = 0,
+  totalProfit = 0,
+  totalExpenses = 0,
+  profitMargin = 0,
+  percentageChange = {},
 }: KeyMetricsProps) {
-  const renderChange = (value: number) => (
-    <span className={value >= 0 ? "text-green-500" : "text-red-500"}>
-      {value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%
-    </span>
-  );
+  const renderChange = (value?: number) => {
+    const safeValue = value ?? 0;
+    return (
+      <span className={safeValue >= 0 ? "text-green-500" : "text-red-500"}>
+        {safeValue.toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}
+        %
+      </span>
+    );
+  };
 
-  const renderIcon = (value: number) =>
-    value >= 0 ? <TrendingUp className="h-3 w-3 text-green-500" /> : <TrendingDown className="h-3 w-3 text-red-500" />;
+  const renderIcon = (value?: number) =>
+    (value ?? 0) >= 0 ? (
+      <TrendingUp className="h-3 w-3 text-green-500" />
+    ) : (
+      <TrendingDown className="h-3 w-3 text-red-500" />
+    );
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -42,11 +53,14 @@ export default function KeyMetrics({
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            {totalRevenue.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </div>
           <p className="text-xs text-muted-foreground flex items-center gap-1">
-            {renderIcon(percentageChange.payments)}
-            {renderChange(percentageChange.payments)} from last period
+            {renderIcon(percentageChange.totalRevenue)}
+            {renderChange(percentageChange.totalRevenue)} from last period
           </p>
         </CardContent>
       </Card>
@@ -59,11 +73,14 @@ export default function KeyMetrics({
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {totalProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            {totalProfit.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </div>
           <p className="text-xs text-muted-foreground flex items-center gap-1">
-            {renderIcon(percentageChange.profit)}
-            {renderChange(percentageChange.profit)} from last period
+            {renderIcon(percentageChange.totalProfit)}
+            {renderChange(percentageChange.totalProfit)} from last period
           </p>
         </CardContent>
       </Card>
@@ -76,11 +93,14 @@ export default function KeyMetrics({
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {totalExpenses.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            {totalExpenses.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </div>
           <p className="text-xs text-muted-foreground flex items-center gap-1">
-            {renderIcon(percentageChange.expenses)}
-            {renderChange(percentageChange.expenses)} from last period
+            {renderIcon(percentageChange.totalExpenses)}
+            {renderChange(percentageChange.totalExpenses)} from last period
           </p>
         </CardContent>
       </Card>
@@ -93,7 +113,11 @@ export default function KeyMetrics({
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {profitMargin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%
+            {profitMargin.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+            %
           </div>
           <p className="text-xs text-muted-foreground flex items-center gap-1">
             {renderIcon(percentageChange.profitMargin)}

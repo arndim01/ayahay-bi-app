@@ -51,34 +51,6 @@ import RouteProfitabilityCard from "@/components/executive dashboard/RouteProfit
 import ShipPerformanceCard from "@/components/executive dashboard/ShipPerformance";
 import { apiService } from "@/services/api.service";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-
-function useFetchDataWithFilter(baseUrl: string, timeFilter: string) {
-  const [data, setData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchData() {
-      const url = `${baseUrl}/${timeFilter}`;
-      try {
-        // Add timeFilter as query parameter
-
-        const response = await fetch(url);
-        const json = await response.json();
-        console.log(`Fetched filtered data from ${url}:`, json);
-        setData(json);
-      } catch (error) {
-        console.error(`Error fetching ${url}:`, error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-  }, [baseUrl, timeFilter]);
-
-  return { data, loading, setData };
-}
-
 function useApiData<T>(url: string, deps: any[] = []) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
@@ -132,15 +104,15 @@ export default function ShippingDashboard() {
     [timeFilter]
   );
 
+  const { data: dashboardMetrics } = useApiData<any>(
+    `/business-intelligence/dashboard-metrics/${timeFilter}`,
+    [timeFilter]
+  );
+
   const { data: routeProfitabilityData } = useApiData<any[]>(
     `/business-intelligence/route-profitability/${timeFilter}`,
     [timeFilter]
   );
-
-  // Convert time filter to URL-safe format
-  const getUrlSafeTimeFilter = (filter: string) => {
-    return filter.replace(/ /g, "-"); // Convert spaces to hyphens
-  };
 
   // Updated to use URL-safe time filters
   const { data: topRoutes } = useApiData<any[]>(
@@ -153,6 +125,11 @@ export default function ShippingDashboard() {
     `/business-intelligence/ship-profits/${timeFilter}`,
     [timeFilter]
   );
+
+  // Convert time filter to URL-safe format
+  const getUrlSafeTimeFilter = (filter: string) => {
+    return filter.replace(/ /g, "-"); // Convert spaces to hyphens
+  };
 
   console.log("Payments", paymentsData);
   console.log("Expenses", expensesData);
@@ -174,62 +151,21 @@ export default function ShippingDashboard() {
   });
 
   const [percentageChange, setPercentageChange] = useState({
-    trips: 0,
-    payments: 0,
-    expenses: 0,
-    profit: 0,
+    totalTrips: 0,
+    totalRevenue: 0,
+    totalExpenses: 0,
+    totalProfit: 0,
     profitMargin: 0,
-    cargos: 0,
-    passengers: 0,
+    totalCargos: 0,
+    totalPassengers: 0,
   });
 
   useEffect(() => {
-    // Simply calculate totals from the already-filtered data
-    const totalRevenue = (
-      Array.isArray(paymentsData) ? paymentsData : []
-    ).reduce((a, b) => a + (Number(b.total_price) || 0), 0);
-
-    const totalExpenses = (
-      Array.isArray(expensesData) ? expensesData : []
-    ).reduce((a, b) => a + (Number(b.amount) || 0), 0);
-
-    const totalProfit = totalRevenue - totalExpenses;
-    const profitMargin =
-      totalRevenue !== 0 ? (totalProfit / totalRevenue) * 100 : 0;
-
-    setMetrics({
-      totalRevenue,
-      totalTrips: Array.isArray(tripsData) ? tripsData.length : 0,
-      totalExpenses,
-      totalProfit,
-      profitMargin,
-      totalCargos: Array.isArray(cargosData) ? cargosData.length : 0,
-      totalPassengers: Array.isArray(passengersData)? passengersData.length : 0,
-      totalBookings: Array.isArray(bookingsData)? bookingsData.length : 0,
-    });
-
-    // For percentage changes, you'll need to implement previous period comparison
-    // This would require additional API endpoints for previous period data
-    // For now, setting to 0
-    setPercentageChange({
-      trips: 0, // TODO: Implement previous period comparison
-      payments: 0,
-      expenses: 0,
-      profit: 0,
-      profitMargin: 0,
-      cargos: 0,
-      passengers: 0,
-    });
-  }, [
-    tripsData,
-    paymentsData,
-    expensesData,
-    cargosData,
-    passengersData,
-    bookingsData,
-    timeFilter,
-    routeProfitabilityData,
-  ]);
+    if (dashboardMetrics) {
+      setMetrics(dashboardMetrics.current);
+      setPercentageChange(dashboardMetrics.percentageChange);
+    }
+  }, [dashboardMetrics]);
 
   return (
     <div className="p-6 space-y-6">
@@ -243,11 +179,11 @@ export default function ShippingDashboard() {
 
       {/* Key Metrics - now using database-filtered data */}
       <KeyMetrics
-        totalRevenue={metrics.totalRevenue}
-        totalProfit={metrics.totalProfit}
-        totalExpenses={metrics.totalExpenses}
-        profitMargin={metrics.profitMargin}
-        percentageChange={percentageChange}
+        totalRevenue={metrics.totalRevenue ?? 0}
+        totalProfit={metrics.totalProfit ?? 0}
+        totalExpenses={metrics.totalExpenses ?? 0}
+        profitMargin={metrics.profitMargin ?? 0}
+        percentageChange={percentageChange ?? 0}
       />
 
       {/* Operational Metrics */}
@@ -256,9 +192,9 @@ export default function ShippingDashboard() {
         totalPassengers={metrics?.totalPassengers ?? 0}
         totalTrips={metrics?.totalTrips ?? 0}
         percentageChange={{
-          cargos: percentageChange?.cargos ?? 0,
-          passengers: percentageChange?.passengers ?? 0,
-          trips: percentageChange?.trips ?? 0,
+          cargos: percentageChange?.totalCargos ?? 0,
+          passengers: percentageChange?.totalPassengers ?? 0,
+          trips: percentageChange?.totalTrips ?? 0,
         }}
       />
 
