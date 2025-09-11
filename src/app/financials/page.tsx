@@ -42,6 +42,11 @@ import RevenueByRouteCard from "@/components/financials/RevenueByRouteCard";
 import RevenueByShipCard from "@/components/financials/RevenueByShipCard";
 import PassengerVsCargoCard from "@/components/financials/PassengerVsCargoCard";
 import RevenueBySourceCard from "@/components/financials/RevenueBySource";
+import CostBreakdownCard from "@/components/financials/CostBreakdownCard";
+import { RevenueTrendsCard } from "@/components/financials/RevenueTrendCard";
+import { BudgetVarianceCard } from "@/components/financials/BudgetVarianceCard";
+import AccountsReceivableAgingCard from "@/components/financials/AccountsReceivableAgingCard";
+import AccountsPayableCard from "@/components/financials/AccountsPayableCard";
 
 export default function FinancialsPage() {
   const [timeFilter, setTimeFilter] = useState<
@@ -74,6 +79,26 @@ export default function FinancialsPage() {
     [timeFilter]
   );
 
+  const { data: costBreakdown } = useApiData<any[]>(
+    `/business-intelligence/cost-breakdown/${timeFilter}`,
+    [timeFilter]
+  );
+
+  const { data: revenueTrends } = useApiData<any[]>(
+    `/business-intelligence/revenue-trend/${timeFilter}`,
+    [timeFilter]
+  );
+
+  const { data: accountsReceivable } = useApiData<any[]>(
+    `/business-intelligence/accounts-receivable/${timeFilter}`,
+    [timeFilter]
+  );
+
+  const { data: accountsPayable } = useApiData<any[]>(
+    `/business-intelligence/accounts-Payable/${timeFilter}`,
+    [timeFilter]
+  );
+
   const [metrics, setMetrics] = useState({
     totalRevenue: 0,
     totalProfit: 0,
@@ -88,43 +113,6 @@ export default function FinancialsPage() {
   }, [dashboardMetrics]);
 
   // Sample data for charts
-
-  const costBreakdown = [
-    { category: "Fuel", amount: 2800000, percentage: 35, trend: 8 },
-    { category: "Port Fees", amount: 1600000, percentage: 20, trend: -2 },
-    { category: "Crew Salaries", amount: 2400000, percentage: 30, trend: 5 },
-    {
-      category: "Maintenance/Repairs",
-      amount: 1200000,
-      percentage: 15,
-      trend: 12,
-    },
-  ];
-
-  const revenueTrends = [
-    { month: "Jan", revenue: 980000, budget: 950000, variance: 30000 },
-    { month: "Feb", revenue: 1120000, budget: 1100000, variance: 20000 },
-    { month: "Mar", revenue: 1350000, budget: 1300000, variance: 50000 },
-    { month: "Apr", revenue: 1280000, budget: 1350000, variance: -70000 },
-    { month: "May", revenue: 1450000, budget: 1400000, variance: 50000 },
-    { month: "Jun", revenue: 1680000, budget: 1600000, variance: 80000 },
-  ];
-
-  const accountsReceivable = [
-    { period: "0-30 days", amount: 850000, percentage: 68, status: "current" },
-    { period: "31-60 days", amount: 280000, percentage: 22, status: "warning" },
-    { period: "61-90 days", amount: 95000, percentage: 8, status: "overdue" },
-    { period: "90+ days", amount: 25000, percentage: 2, status: "critical" },
-  ];
-
-  const accountsPayable = [
-    { period: "0-30 days", amount: 620000, percentage: 72, status: "current" },
-    { period: "31-60 days", amount: 180000, percentage: 21, status: "warning" },
-    { period: "61-90 days", amount: 45000, percentage: 5, status: "overdue" },
-    { period: "90+ days", amount: 15000, percentage: 2, status: "critical" },
-  ];
-
-  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
 
   return (
     <div className="p-6 space-y-6">
@@ -170,250 +158,35 @@ export default function FinancialsPage() {
         </TabsContent>
 
         <TabsContent value="costs" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Cost Breakdown Analysis</CardTitle>
-              <CardDescription>
-                Detailed analysis of operational expenses
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  {costBreakdown.map((cost, index) => (
-                    <div key={cost.category} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">
-                          {cost.category}
-                        </span>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm font-bold">
-                            ${(cost.amount / 1000000).toFixed(1)}M
-                          </span>
-                          <Badge
-                            variant={cost.trend > 0 ? "destructive" : "default"}
-                          >
-                            {cost.trend > 0 ? "+" : ""}
-                            {cost.trend}%
-                          </Badge>
-                        </div>
-                      </div>
-                      <Progress value={cost.percentage} className="h-2" />
-                      <div className="text-xs text-muted-foreground">
-                        {cost.percentage}% of total costs
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={costBreakdown}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ category, percentage }) =>
-                        `${category}: ${percentage}%`
-                      }
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="amount"
-                    >
-                      {costBreakdown.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(value: number | string) => {
-                        if (typeof value === "number") {
-                          return [
-                            `$${(value / 1_000_000).toFixed(1)}M`,
-                            "Cost",
-                          ];
-                        }
-                        return [value, "Cost"];
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
+          <CostBreakdownCard costBreakdown={costBreakdown ?? []} />
         </TabsContent>
 
         <TabsContent value="trends" className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Revenue Trends</CardTitle>
-                <CardDescription>
-                  Monthly revenue performance over time
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={revenueTrends}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip
-                      formatter={(value: number | string) => {
-                        if (typeof value === "number") {
-                          return [
-                            `$${(value / 1_000_000).toFixed(1)}M`,
-                            "Amount",
-                          ];
-                        }
-                        return [value, "Amount"];
-                      }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="revenue"
-                      stroke="#0088FE"
-                      strokeWidth={3}
-                      name="Actual Revenue"
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="budget"
-                      stroke="#00C49F"
-                      strokeWidth={2}
-                      strokeDasharray="5 5"
-                      name="Budget"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Budget vs Actual Variance</CardTitle>
-                <CardDescription>
-                  Performance against budget targets
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={revenueTrends}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip
-                      formatter={(value: number | string) => {
-                        if (typeof value === "number") {
-                          return [`$${(value / 1000).toFixed(0)}K`, "Variance"];
-                        }
-                        return [value, "Variance"];
-                      }}
-                    />
-
-                    <Bar dataKey="variance">
-                      {revenueTrends.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={entry.variance >= 0 ? "#00C49F" : "#FF8042"}
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+            <RevenueTrendsCard
+              data={revenueTrends ?? []}
+              timeFilter={timeFilter}
+            />
+            <BudgetVarianceCard
+              data={revenueTrends ?? []}
+              timeFilter={timeFilter}
+            />
           </div>
         </TabsContent>
 
         <TabsContent value="accounts" className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Accounts Receivable Aging</CardTitle>
-                <CardDescription>
-                  Outstanding customer payments by age
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {accountsReceivable.map((account, index) => (
-                    <div
-                      key={account.period}
-                      className="flex items-center justify-between p-3 rounded-lg border"
-                    >
-                      <div className="flex items-center space-x-3">
-                        {account.status === "current" && (
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                        )}
-                        {account.status === "warning" && (
-                          <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                        )}
-                        {(account.status === "overdue" ||
-                          account.status === "critical") && (
-                          <AlertTriangle className="h-4 w-4 text-red-500" />
-                        )}
-                        <span className="font-medium">{account.period}</span>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-bold">
-                          ${(account.amount / 1000).toFixed(0)}K
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {account.percentage}%
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <AccountsReceivableAgingCard
+              accountsReceivable={accountsReceivable ?? []}
+            />
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Accounts Payable Aging</CardTitle>
-                <CardDescription>
-                  Outstanding vendor payments by age
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {accountsPayable.map((account, index) => (
-                    <div
-                      key={account.period}
-                      className="flex items-center justify-between p-3 rounded-lg border"
-                    >
-                      <div className="flex items-center space-x-3">
-                        {account.status === "current" && (
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                        )}
-                        {account.status === "warning" && (
-                          <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                        )}
-                        {(account.status === "overdue" ||
-                          account.status === "critical") && (
-                          <AlertTriangle className="h-4 w-4 text-red-500" />
-                        )}
-                        <span className="font-medium">{account.period}</span>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-bold">
-                          ${(account.amount / 1000).toFixed(0)}K
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {account.percentage}%
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <AccountsPayableCard accountsPayable={accountsPayable ?? []} />
+          
           </div>
         </TabsContent>
 
         <TabsContent value="profitability" className="space-y-4">
+
           <Card>
             <CardHeader>
               <CardTitle>Net Profit Margin by Route</CardTitle>
@@ -429,9 +202,21 @@ export default function FinancialsPage() {
                       <span className="font-medium">{route.route}</span>
                       <div className="flex items-center space-x-4">
                         <span className="text-sm">
-                          Revenue: {route.revenue}
+                          Revenue:{" "}
+                          {route.revenue.toLocaleString("en-US", {
+                            style: "currency",
+                            currency: "PHP",
+                            maximumFractionDigits: 2,
+                          })}
                         </span>
-                        <span className="text-sm">Profit: {route.profit}</span>
+                        <span className="text-sm">
+                          Profit:{" "}
+                          {route.profit.toLocaleString("en-US", {
+                            style: "currency",
+                            currency: "PHP",
+                            maximumFractionDigits: 2,
+                          })}
+                        </span>
                         <Badge
                           variant={
                             route.margin >= 18
