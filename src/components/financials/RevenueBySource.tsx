@@ -40,7 +40,11 @@ export const RevenueBySourceCard: React.FC<RevenueBySourceCardProps> = ({ data }
               </div>
               <div className="text-right">
                 <div className="text-sm font-bold">
-                  {source.revenue}
+                  {source.revenue.toLocaleString("en-US", {
+                    style: "currency",
+                    currency: "PHP",
+                    maximumFractionDigits: 2,
+                  })}
                 </div>
                 <div className="text-xs text-muted-foreground">
                   {source.percentage}%

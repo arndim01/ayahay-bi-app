@@ -39,17 +39,19 @@ export default function RevenueByRouteCard({ data }: RevenueByRouteCardProps) {
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={data ?? []}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis
-              dataKey="route"
-              angle={-45}
-              textAnchor="end"
-              height={80}
-            />
+            <XAxis dataKey="route" angle={-45} textAnchor="end" height={80} />
             <YAxis />
             <Tooltip
               formatter={(value: number | string | (number | string)[]) => {
                 if (typeof value === "number") {
-                  return [`$${value.toLocaleString()}`, "Revenue"];
+                  return [
+                    `${value.toLocaleString("en-US", {
+                      style: "currency",
+                      currency: "PHP",
+                      maximumFractionDigits: 2,
+                    })}`,
+                    "Revenue",
+                  ];
                 }
                 return [String(value), "Revenue"];
               }}

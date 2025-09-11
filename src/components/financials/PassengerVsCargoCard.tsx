@@ -42,7 +42,10 @@ export default function PassengerVsCargoCard({ passengerVsCargo }: PassengerVsCa
             <Tooltip
               formatter={(value: number | string | (number | string)[]) => {
                 if (typeof value === "number") {
-                  return [`$${(value / 1_000_000).toFixed(1)}M`, "Revenue"];
+                  return [`${value.toLocaleString('en-US',{
+                    style: 'currency', currency: 'PHP',
+                    maximumFractionDigits: 2,
+                  })}`, "Revenue"];
                 }
                 return [String(value), "Revenue"];
               }}

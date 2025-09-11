@@ -51,8 +51,6 @@ import RouteProfitabilityCard from "@/components/executive dashboard/RouteProfit
 import ShipPerformanceCard from "@/components/executive dashboard/ShipPerformance";
 import { useApiData } from "@/hooks/useApiData";
 
-
-
 export default function ShippingDashboard() {
   const [timeFilter, setTimeFilter] = useState<
     "today" | "this-month" | "this-year"
@@ -180,15 +178,15 @@ export default function ShippingDashboard() {
 
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
         {/* Revenue, Profit, Expenses Chart - pass filtered data */}
         <RevenueChart
           paymentsData={Array.isArray(paymentsData) ? paymentsData : []}
           expensesData={Array.isArray(expensesData) ? expensesData : []}
           timeFilter={timeFilter}
         />
-
-        {/* Booking Distribution */}
-        <BookingDistributionCard bookingsData={bookingsData ?? []} />
+        {/* Booking Distribution */}{" "}
+        {/* <BookingDistributionCard bookingsData={bookingsData ?? []} /> */}
       </div>
 
       {/* Charts Row 2 */}

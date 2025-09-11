@@ -62,13 +62,21 @@ const ShipPerformanceCard: React.FC<ShipPerformanceCardProps> = ({
                 <div>
                   <p className="font-medium">{ship.ship_name}</p>
                   <p className="text-sm text-muted-foreground">
-                    Revenue: ${Number(ship.total_revenue).toLocaleString()}
+                    Revenue:{" "}
+                    {ship.total_revenue.toLocaleString("en-US", {
+                      style: "currency",
+                      currency: "PHP",
+                      maximumFractionDigits: 2,
+                    })}
                   </p>
                 </div>
               </div>
               <div className="text-right flex flex-col items-end gap-1">
                 <p className="text-lg font-bold">
-                  ${Number(ship.net_profit).toLocaleString()}
+                  {Number(ship.net_profit).toLocaleString('en-US',{
+                      style: 'currency', currency: 'PHP',
+                      maximumFractionDigits: 2,
+                    })}
                 </p>
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground">
