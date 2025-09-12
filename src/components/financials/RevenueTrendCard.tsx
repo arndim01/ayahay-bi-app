@@ -18,7 +18,7 @@ import {
   Legend,
 } from "recharts";
 
-interface RevenueTrend {
+export interface RevenueTrend {
   month?: string;
   day?: number;
   revenue: number;

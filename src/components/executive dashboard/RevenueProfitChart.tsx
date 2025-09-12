@@ -22,9 +22,20 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+// Define proper interfaces instead of using 'any'
+export interface PaymentData {
+  payment_date: string;
+  total_price: number;
+}
+
+export interface ExpenseData {
+  created_at: string;
+  amount: number;
+}
+
 interface RevenueChartProps {
-  paymentsData: any[];
-  expensesData: any[];
+  paymentsData: PaymentData[];
+  expensesData: ExpenseData[];
   timeFilter: "today" | "this-month" | "this-year";
 }
 
@@ -43,12 +54,21 @@ export default function RevenueChart({
     const now = new Date();
 
     // Helper to sum revenue/expenses by a filter function
-    const sumBy = (data: any[], field: string, filterFn: (item: any) => boolean) =>
-      data.filter(filterFn).reduce((sum, item) => sum + Number(item[field] || 0), 0);
+    const sumBy = (
+      data: PaymentData[] | ExpenseData[], 
+      field: string, 
+      filterFn: (item: PaymentData | ExpenseData) => boolean
+    ) =>
+      data.filter(filterFn).reduce((sum, item) => {
+        const value = field === 'total_price' 
+          ? (item as PaymentData).total_price 
+          : (item as ExpenseData).amount;
+        return sum + Number(value || 0);
+      }, 0);
 
     if (timeFilter === "today") {
       const revenue = sumBy(paymentsData, "total_price", (p) => {
-        const d = new Date(p.payment_date);
+        const d = new Date((p as PaymentData).payment_date);
         return (
           d.getDate() === now.getDate() &&
           d.getMonth() === now.getMonth() &&
@@ -57,7 +77,7 @@ export default function RevenueChart({
       });
 
       const expenses = sumBy(expensesData, "amount", (e) => {
-        const d = new Date(e.created_at);
+        const d = new Date((e as ExpenseData).created_at);
         return (
           d.getDate() === now.getDate() &&
           d.getMonth() === now.getMonth() &&
@@ -75,7 +95,7 @@ export default function RevenueChart({
         const day = i + 1;
 
         const revenue = sumBy(paymentsData, "total_price", (p) => {
-          const d = new Date(p.payment_date);
+          const d = new Date((p as PaymentData).payment_date);
           return (
             d.getDate() === day &&
             d.getMonth() === now.getMonth() &&
@@ -84,7 +104,7 @@ export default function RevenueChart({
         });
 
         const expenses = sumBy(expensesData, "amount", (e) => {
-          const d = new Date(e.created_at);
+          const d = new Date((e as ExpenseData).created_at);
           return (
             d.getDate() === day &&
             d.getMonth() === now.getMonth() &&
@@ -107,12 +127,12 @@ export default function RevenueChart({
 
       const monthlyData = months.map((month, index) => {
         const revenue = sumBy(paymentsData, "total_price", (p) => {
-          const d = new Date(p.payment_date);
+          const d = new Date((p as PaymentData).payment_date);
           return d.getMonth() === index && d.getFullYear() === now.getFullYear();
         });
 
         const expenses = sumBy(expensesData, "amount", (e) => {
-          const d = new Date(e.created_at);
+          const d = new Date((e as ExpenseData).created_at);
           return d.getMonth() === index && d.getFullYear() === now.getFullYear();
         });
 

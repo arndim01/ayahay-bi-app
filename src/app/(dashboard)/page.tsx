@@ -1,122 +1,144 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
-import {
-  Ship,
-  Users,
-  Package,
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  Calendar,
-  MapPin,
-  Anchor,
-} from "lucide-react";
-import { Trip } from "@/lib/types";
 import KeyMetrics from "@/components/executive dashboard/KeyMetrics";
 import PageHeader from "@/components/utils/PageHeader";
 import OperationalMetrics from "@/components/executive dashboard/OperationalMetrics";
 import RevenueChart from "@/components/executive dashboard/RevenueProfitChart";
-import BookingDistributionCard from "@/components/executive dashboard/BookingDistribution";
 import TopRoutesPerformanceCard from "@/components/executive dashboard/TopRoute";
 import ShipProfitDistributionCard from "@/components/executive dashboard/ShipProfitDistribution";
 import RouteProfitabilityCard from "@/components/executive dashboard/RouteProfitability";
 import ShipPerformanceCard from "@/components/executive dashboard/ShipPerformance";
 import { useApiData } from "@/hooks/useApiData";
+import {ExpenseData, PaymentData} from "@/components/executive dashboard/RevenueProfitChart"
+
+// Define proper types instead of using 'any'
+// interface TripData {
+//   id: string;
+//   route: string;
+//   revenue: number;
+//   date: string;
+//   // Add other trip properties as needed
+// }
+
+interface CargoData {
+  id: string;
+  weight: number;
+  revenue: number;
+  // Add other cargo properties as needed
+}
+
+// interface PassengerData {
+//   id: string;
+//   name: string;
+//   ticketPrice: number;
+//   // Add other passenger properties as needed
+// }
+
+// interface BookingData {
+//   id: string;
+//   passengerCount: number;
+//   totalAmount: number;
+//   // Add other booking properties as needed
+// }
+
+interface DashboardMetrics {
+  current: {
+    totalRevenue: number;
+    totalTrips: number;
+    totalExpenses: number;
+    totalProfit: number;
+    profitMargin: number;
+    totalCargos: number;
+    totalPassengers: number;
+    totalBookings: number;
+  };
+  percentageChange: {
+    totalTrips: number;
+    totalRevenue: number;
+    totalExpenses: number;
+    totalProfit: number;
+    profitMargin: number;
+    totalCargos: number;
+    totalPassengers: number;
+  };
+}
+
+interface RouteData {
+  route: string;
+  revenue: number;
+  profitability?: number;
+  volume: number;
+  profitMargin: number;
+  status: string;
+}
+
+interface ShipProfitData {
+  ship_name: string;
+  net_profit: number;
+  total_revenue: number;
+  expenses: number;
+  status: string;
+  profitMargin: number;
+}
 
 export default function ShippingDashboard() {
   const [timeFilter, setTimeFilter] = useState<
     "today" | "this-month" | "this-year"
   >("this-month");
 
-  // Updated to use filtered data directly from backend
-  const { data: tripsData } = useApiData<any[]>(
-    `/business-intelligence/trips/${timeFilter}`,
-    [timeFilter]
-  );
-  const { data: paymentsData } = useApiData<any[]>(
+  // Updated to use proper types instead of 'any'
+  // const { data: tripsData } = useApiData<TripData[]>(
+  //   `/business-intelligence/trips/${timeFilter}`,
+  //   [timeFilter]
+  // );
+  const { data: paymentsData } = useApiData<PaymentData[]>(
     `/business-intelligence/payments/${timeFilter}`,
     [timeFilter]
   );
-  const { data: expensesData } = useApiData<any[]>(
+  const { data: expensesData } = useApiData<ExpenseData[]>(
     `/business-intelligence/expenses/${timeFilter}`,
     [timeFilter]
   );
-  const { data: cargosData } = useApiData<any[]>(
+  const { data: cargosData } = useApiData<CargoData[]>(
     `/business-intelligence/cargos/${timeFilter}`,
     [timeFilter]
   );
-  const { data: passengersData } = useApiData<any[]>(
-    `/business-intelligence/passengers/${timeFilter}`,
-    [timeFilter]
-  );
-  const { data: bookingsData } = useApiData<any[]>(
-    `/business-intelligence/bookings/${timeFilter}`,
-    [timeFilter]
-  );
+  // const { data: passengersData } = useApiData<PassengerData[]>(
+  //   `/business-intelligence/passengers/${timeFilter}`,
+  //   [timeFilter]
+  // );
+  // const { data: bookingsData } = useApiData<BookingData[]>(
+  //   `/business-intelligence/bookings/${timeFilter}`,
+  //   [timeFilter]
+  // );
 
-  const { data: dashboardMetrics } = useApiData<any>(
+  const { data: dashboardMetrics } = useApiData<DashboardMetrics>(
     `/business-intelligence/dashboard-metrics/${timeFilter}`,
     [timeFilter]
   );
 
-  const { data: routeProfitabilityData } = useApiData<any[]>(
+  const { data: routeProfitabilityData } = useApiData<RouteData[]>(
     `/business-intelligence/route-profitability/${timeFilter}`,
     [timeFilter]
   );
 
-  // Updated to use URL-safe time filters
-  const { data: topRoutes } = useApiData<any[]>(
+  const { data: topRoutes } = useApiData<RouteData[]>(
     `/business-intelligence/top-routes/${timeFilter}`,
     [timeFilter]
   );
 
-  // Get ship profits data
-  const { data: shipProfitsData } = useApiData<any[]>(
+  const { data: shipProfitsData } = useApiData<ShipProfitData[]>(
     `/business-intelligence/ship-profits/${timeFilter}`,
     [timeFilter]
   );
 
-  // Convert time filter to URL-safe format
-  const getUrlSafeTimeFilter = (filter: string) => {
-    return filter.replace(/ /g, "-"); // Convert spaces to hyphens
-  };
-
   console.log("Payments", paymentsData);
   console.log("Expenses", expensesData);
   console.log("Cargos", cargosData);
-
   console.log("TopRoute", topRoutes);
   console.log("Ship Profits", shipProfitsData);
 
-  // Remove all client-side filtering logic since it's now done in database
   const [metrics, setMetrics] = useState({
     totalRevenue: 0,
     totalTrips: 0,
@@ -178,15 +200,12 @@ export default function ShippingDashboard() {
 
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
         {/* Revenue, Profit, Expenses Chart - pass filtered data */}
         <RevenueChart
           paymentsData={Array.isArray(paymentsData) ? paymentsData : []}
           expensesData={Array.isArray(expensesData) ? expensesData : []}
           timeFilter={timeFilter}
         />
-        {/* Booking Distribution */}{" "}
-        {/* <BookingDistributionCard bookingsData={bookingsData ?? []} /> */}
       </div>
 
       {/* Charts Row 2 */}
@@ -208,8 +227,7 @@ export default function ShippingDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Route Profitability Matrix - keep sample data for now */}
-
+        {/* Route Profitability Matrix */}
         <RouteProfitabilityCard
           routeProfitability={
             Array.isArray(routeProfitabilityData) ? routeProfitabilityData : []

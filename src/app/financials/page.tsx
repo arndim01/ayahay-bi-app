@@ -10,31 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  LineChart,
-  Line,
-  ComposedChart,
-} from "recharts";
-import {
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  Package,
-  AlertTriangle,
-  CheckCircle,
-} from "lucide-react";
 import PageHeader from "@/components/utils/PageHeader";
 import { useApiData } from "@/hooks/useApiData";
 import KeyMetrics from "@/components/executive dashboard/KeyMetrics";
@@ -48,53 +24,119 @@ import { BudgetVarianceCard } from "@/components/financials/BudgetVarianceCard";
 import AccountsReceivableAgingCard from "@/components/financials/AccountsReceivableAgingCard";
 import AccountsPayableCard from "@/components/financials/AccountsPayableCard";
 
+import { RevenueTrend } from "@/components/financials/RevenueTrendCard";
+
+// Define proper TypeScript interfaces
+interface DashboardMetrics {
+  current: {
+    totalRevenue: number;
+    totalProfit: number;
+    totalExpenses: number;
+    profitMargin: number;
+  };
+  percentageChange: {
+    totalRevenue: number;
+    totalProfit: number;
+    totalExpenses: number;
+    profitMargin: number;
+  };
+}
+
+interface RevenueByRoute {
+  route: string;
+  revenue: number;
+  profit: number;
+  margin: number;
+}
+
+interface RevenueByShip {
+  ship: string;
+  revenue: number;
+  utilization: number;
+}
+
+interface PassengerVsCargo {
+  type: "passenger" | "cargo";
+  revenue: number;
+  percentage: number;
+  name: string;
+  value: number;
+}
+
+interface CustomerType {
+  type: string;
+  revenue: number;
+  percentage: number;
+}
+
+interface CostBreakdown {
+  category: string;
+  amount: number;
+  percentage: number;
+  trend: number;
+}
+
+interface AccountsReceivable {
+  period: string;
+  amount: number;
+  percentage: number;
+  status: "current" | "warning" | "overdue" | "critical";
+}
+
+interface AccountsPayable {
+  period: string;
+  amount: number;
+  percentage: number;
+  status: "current" | "warning" | "overdue" | "critical";
+}
+
 export default function FinancialsPage() {
   const [timeFilter, setTimeFilter] = useState<
     "today" | "this-month" | "this-year"
   >("this-month");
 
-  // Metrics
-  const { data: dashboardMetrics } = useApiData<any>(
+  // Metrics with proper typing
+  const { data: dashboardMetrics } = useApiData<DashboardMetrics>(
     `/business-intelligence/dashboard-metrics/${timeFilter}`,
     [timeFilter]
   );
 
-  const { data: revenueByRoute } = useApiData<any[]>(
+  const { data: revenueByRoute } = useApiData<RevenueByRoute[]>(
     `/business-intelligence/revenue-by-route/${timeFilter}`,
     [timeFilter]
   );
 
-  const { data: revenueByShip } = useApiData<any[]>(
+  const { data: revenueByShip } = useApiData<RevenueByShip[]>(
     `/business-intelligence/revenue-by-ship/${timeFilter}`,
     [timeFilter]
   );
 
-  const { data: passengerVsCargo } = useApiData<any[]>(
+  const { data: passengerVsCargo } = useApiData<PassengerVsCargo[]>(
     `/business-intelligence/passenger-vs-cargo/${timeFilter}`,
     [timeFilter]
   );
 
-  const { data: customerTypes } = useApiData<any[]>(
+  const { data: customerTypes } = useApiData<CustomerType[]>(
     `/business-intelligence/revenue-by-source/${timeFilter}`,
     [timeFilter]
   );
 
-  const { data: costBreakdown } = useApiData<any[]>(
+  const { data: costBreakdown } = useApiData<CostBreakdown[]>(
     `/business-intelligence/cost-breakdown/${timeFilter}`,
     [timeFilter]
   );
 
-  const { data: revenueTrends } = useApiData<any[]>(
+  const { data: revenueTrends } = useApiData<RevenueTrend[]>(
     `/business-intelligence/revenue-trend/${timeFilter}`,
     [timeFilter]
   );
 
-  const { data: accountsReceivable } = useApiData<any[]>(
+  const { data: accountsReceivable } = useApiData<AccountsReceivable[]>(
     `/business-intelligence/accounts-receivable/${timeFilter}`,
     [timeFilter]
   );
 
-  const { data: accountsPayable } = useApiData<any[]>(
+  const { data: accountsPayable } = useApiData<AccountsPayable[]>(
     `/business-intelligence/accounts-Payable/${timeFilter}`,
     [timeFilter]
   );
@@ -111,8 +153,6 @@ export default function FinancialsPage() {
       setMetrics(dashboardMetrics.current);
     }
   }, [dashboardMetrics]);
-
-  // Sample data for charts
 
   return (
     <div className="p-6 space-y-6">
@@ -181,12 +221,10 @@ export default function FinancialsPage() {
             />
 
             <AccountsPayableCard accountsPayable={accountsPayable ?? []} />
-          
           </div>
         </TabsContent>
 
         <TabsContent value="profitability" className="space-y-4">
-
           <Card>
             <CardHeader>
               <CardTitle>Net Profit Margin by Route</CardTitle>
@@ -196,7 +234,7 @@ export default function FinancialsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {revenueByRoute?.map((route, index) => (
+                {revenueByRoute?.map((route) => (
                   <div key={route.route} className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="font-medium">{route.route}</span>

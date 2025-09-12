@@ -200,7 +200,7 @@ export default function PassengersPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {routeBreakdown.map((route, index) => (
+                  {routeBreakdown.map((route) => (
                     <div key={route.route} className="flex items-center justify-between">
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-1">

@@ -24,23 +24,29 @@ const COLORS = [
   "var(--color-chart-6)",
 ];
 
+// Define proper interface instead of using 'any'
+interface CargoData {
+  id: string;
+  type: string;
+  // Add other cargo properties as needed
+}
+
 interface CargoDistributionCardProps {
-  cargosData: any[]; // fetched cargos
+  cargosData: CargoData[];
 }
 
 const CargoDistributionCard: React.FC<CargoDistributionCardProps> = ({
   cargosData,
 }) => {
-  // Ensure cargosData is always an array
-  const safeCargos = Array.isArray(cargosData) ? cargosData : [];
-
-  // Calculate dynamic distribution by cargo type (e.g., "Loose" or "Rolling")
+  // Calculate dynamic distribution by cargo type - moved inside useMemo
   const cargoDistribution = useMemo(() => {
+    // Ensure cargosData is always an array - moved inside useMemo
+    const safeCargos = Array.isArray(cargosData) ? cargosData : [];
     const total = safeCargos.length || 1;
     const counts: Record<string, number> = {};
 
     safeCargos.forEach((cargo) => {
-      const type = cargo.type || "Unknown"; // adjust field name if needed
+      const type = cargo.type || "Unknown";
       counts[type] = (counts[type] || 0) + 1;
     });
 
@@ -49,7 +55,7 @@ const CargoDistributionCard: React.FC<CargoDistributionCardProps> = ({
       value: Math.round((count / total) * 100),
       color: COLORS[index % COLORS.length],
     }));
-  }, [safeCargos]);
+  }, [cargosData]); // Only depend on cargosData
 
   // Generate chart config dynamically
   const chartConfig = useMemo(() => {

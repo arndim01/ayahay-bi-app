@@ -1,13 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, DependencyList } from "react";
 import { apiService } from "@/services/api.service";
 
-export function useApiData<T>(url: string, deps: any[] = []) {
+export function useApiData<T>(url: string, deps: DependencyList = []) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
+        setLoading(true);
         const res = await apiService.get<T>(url);
         console.log(`Fetched from ${url}:`, res);
         setData(res);
@@ -18,7 +19,8 @@ export function useApiData<T>(url: string, deps: any[] = []) {
       }
     }
     fetchData();
-  }, deps);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url, ...deps]);
 
   return { data, loading, setData };
 }

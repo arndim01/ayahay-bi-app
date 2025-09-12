@@ -46,10 +46,13 @@ const CostBreakdownCard: React.FC<CostBreakdownCardProps> = ({
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">{cost.category}</span>
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm font-bold">{cost.amount.toLocaleString('en-US',{
-                      style: 'currency', currency: 'PHP',
-                      maximumFractionDigits: 2,
-                    })}</span>
+                    <span className="text-sm font-bold">
+                      {cost.amount.toLocaleString("en-US", {
+                        style: "currency",
+                        currency: "PHP",
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
                     <Badge variant={cost.trend > 0 ? "destructive" : "default"}>
                       {cost.trend > 0 ? "+" : ""}
                       {cost.trend}%
@@ -70,7 +73,7 @@ const CostBreakdownCard: React.FC<CostBreakdownCardProps> = ({
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent, index }) =>
+                label={({ percent, index }) =>
                   `${costBreakdown[index].category}: ${Math.round(
                     percent * 100
                   )}%`

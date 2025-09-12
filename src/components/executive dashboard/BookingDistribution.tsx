@@ -24,18 +24,24 @@ const COLORS = [
   "var(--color-chart-6)",
 ];
 
+// Define proper interface instead of using 'any'
+interface BookingData {
+  id: string;
+  source: string;
+  // Add other booking properties as needed
+}
+
 interface BookingDistributionCardProps {
-  bookingsData: any[]; // fetched bookings
+  bookingsData: BookingData[];
 }
 
 const BookingDistributionCard: React.FC<BookingDistributionCardProps> = ({
   bookingsData,
 }) => {
-  // Ensure bookingsData is always an array
-  const safeBookings = Array.isArray(bookingsData) ? bookingsData : [];
-
-  // Calculate dynamic distribution by source
+  // Calculate dynamic distribution by source - moved inside useMemo
   const bookingDistribution = useMemo(() => {
+    // Ensure bookingsData is always an array - moved inside useMemo
+    const safeBookings = Array.isArray(bookingsData) ? bookingsData : [];
     const total = safeBookings.length || 1;
     const counts: Record<string, number> = {};
 
@@ -49,7 +55,7 @@ const BookingDistributionCard: React.FC<BookingDistributionCardProps> = ({
       value: Math.round((count / total) * 100),
       color: COLORS[index % COLORS.length],
     }));
-  }, [safeBookings]);
+  }, [bookingsData]); // Only depend on bookingsData
 
   // Generate chart config dynamically
   const chartConfig = useMemo(() => {
@@ -93,4 +99,5 @@ const BookingDistributionCard: React.FC<BookingDistributionCardProps> = ({
     </Card>
   );
 };
+
 export default BookingDistributionCard;
