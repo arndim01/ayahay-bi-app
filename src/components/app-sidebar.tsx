@@ -37,31 +37,30 @@ const data = {
   navMain: [
     {
       title: "Executive View",
-      url: "/dashboard",
+      url: "/",
       icon: IconDashboard,
     },
-    {
-      title: "Financials",
-      url: "/financials",
-      icon: IconChartBar,
-    },
-    {
-      title: "Operations",
-      url: "/operations",
-      icon: IconMap2,
-    },
-    {
-      title: "Passengers",
-      url: "/passengers",
-      icon: IconUser,
-    },
-    {
-      title: "Analytics",
-      url: "/analytics",
-      icon: IconTrendingUp,
-    },
+    // {
+    //   title: "Financials",
+    //   url: "/financials",
+    //   icon: IconChartBar,
+    // },
+    // {
+    //   title: "Operations",
+    //   url: "/operations",
+    //   icon: IconMap2,
+    // },
+    // {
+    //   title: "Passengers",
+    //   url: "/passengers",
+    //   icon: IconUser,
+    // },
+    // {
+    //   title: "Analytics",
+    //   url: "/analytics",
+    //   icon: IconTrendingUp,
+    // },
   ],
-
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
