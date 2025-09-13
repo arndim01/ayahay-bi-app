@@ -23,10 +23,16 @@ export default function KeyMetrics({
   profitMargin = 0,
   percentageChange = {},
 }: KeyMetricsProps) {
-  const renderChange = (value?: number) => {
+  const renderChange = (value?: number, type?: string) => {
     const safeValue = value ?? 0;
+
+    // Special rule for expenses
+    const isExpenses = type === "expenses";
+    const isRed =
+      isExpenses && safeValue > 100 ? true : safeValue < 0 ? true : false;
+
     return (
-      <span className={safeValue >= 0 ? "text-green-500" : "text-red-500"}>
+      <span className={isRed ? "text-red-500" : "text-green-500"}>
         {safeValue.toLocaleString(undefined, {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
@@ -36,12 +42,19 @@ export default function KeyMetrics({
     );
   };
 
-  const renderIcon = (value?: number) =>
-    (value ?? 0) >= 0 ? (
-      <TrendingUp className="h-3 w-3 text-green-500" />
-    ) : (
+  const renderIcon = (value?: number, type?: string) => {
+    const safeValue = value ?? 0;
+    const isExpenses = type === "expenses";
+
+    const isDown =
+      isExpenses && safeValue > 100 ? true : safeValue < 0 ? true : false;
+
+    return isDown ? (
       <TrendingDown className="h-3 w-3 text-red-500" />
+    ) : (
+      <TrendingUp className="h-3 w-3 text-green-500" />
     );
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -100,7 +113,7 @@ export default function KeyMetrics({
           </div>
           <p className="text-xs text-muted-foreground flex items-center gap-1">
             {renderIcon(percentageChange.totalExpenses)}
-            {renderChange(percentageChange.totalExpenses)} from last period
+            {renderChange(percentageChange.totalExpenses, "expenses")} from last period
           </p>
         </CardContent>
       </Card>
