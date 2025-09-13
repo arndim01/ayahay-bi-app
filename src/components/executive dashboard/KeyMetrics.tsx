@@ -26,10 +26,15 @@ export default function KeyMetrics({
   const renderChange = (value?: number, type?: string) => {
     const safeValue = value ?? 0;
 
-    // Special rule for expenses
-    const isExpenses = type === "expenses";
-    const isRed =
-      isExpenses && safeValue > 100 ? true : safeValue < 0 ? true : false;
+    let isRed = false;
+
+    if (type === "expenses") {
+      // Expenses are only red if > 100%
+      isRed = safeValue > 100;
+    } else {
+      // Normal behavior for other metrics
+      isRed = safeValue < 0;
+    }
 
     return (
       <span className={isRed ? "text-red-500" : "text-green-500"}>
@@ -44,10 +49,16 @@ export default function KeyMetrics({
 
   const renderIcon = (value?: number, type?: string) => {
     const safeValue = value ?? 0;
-    const isExpenses = type === "expenses";
 
-    const isDown =
-      isExpenses && safeValue > 100 ? true : safeValue < 0 ? true : false;
+    let isDown = false;
+
+    if (type === "expenses") {
+      // Expenses are "down" only if > 100%
+      isDown = safeValue > 100;
+    } else {
+      // Normal behavior for other metrics
+      isDown = safeValue < 0;
+    }
 
     return isDown ? (
       <TrendingDown className="h-3 w-3 text-red-500" />
@@ -112,8 +123,9 @@ export default function KeyMetrics({
             })}
           </div>
           <p className="text-xs text-muted-foreground flex items-center gap-1">
-            {renderIcon(percentageChange.totalExpenses)}
-            {renderChange(percentageChange.totalExpenses, "expenses")} from last period
+            {renderIcon(percentageChange.totalExpenses, "expenses")}
+            {renderChange(percentageChange.totalExpenses, "expenses")} from last
+            period
           </p>
         </CardContent>
       </Card>
