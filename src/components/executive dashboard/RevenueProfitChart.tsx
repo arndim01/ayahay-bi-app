@@ -29,7 +29,7 @@ export interface PaymentData {
 }
 
 export interface ExpenseData {
-  created_at: string;
+  departure_date: string;
   amount: number;
 }
 
@@ -77,7 +77,7 @@ export default function RevenueChart({
       });
 
       const expenses = sumBy(expensesData, "amount", (e) => {
-        const d = new Date((e as ExpenseData).created_at);
+        const d = new Date((e as ExpenseData).departure_date);
         return (
           d.getDate() === now.getDate() &&
           d.getMonth() === now.getMonth() &&
@@ -104,7 +104,7 @@ export default function RevenueChart({
         });
 
         const expenses = sumBy(expensesData, "amount", (e) => {
-          const d = new Date((e as ExpenseData).created_at);
+          const d = new Date((e as ExpenseData).departure_date);
           return (
             d.getDate() === day &&
             d.getMonth() === now.getMonth() &&
@@ -132,7 +132,7 @@ export default function RevenueChart({
         });
 
         const expenses = sumBy(expensesData, "amount", (e) => {
-          const d = new Date((e as ExpenseData).created_at);
+          const d = new Date((e as ExpenseData).departure_date);
           return d.getMonth() === index && d.getFullYear() === now.getFullYear();
         });
 
